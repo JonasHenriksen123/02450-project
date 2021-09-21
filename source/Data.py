@@ -20,8 +20,8 @@ class Data:
 
         classnames = np.unique(classlabels)
 
-        self.classdict = dict(zip(classnames, range(len(classnames))))
+        self.class_count = len(classnames)
 
-        self.classes = len(classnames)
+        self.class_dict = dict(zip(classnames, range(self.class_count)))
 
-        self.y = np.array([self.classdict[cl] for cl in classlabels])
+        self.y = np.array([self.class_dict[cl] for cl in classlabels])
