@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 
 class Data:
-    __filename = './ressources/forestfires.csv'
+    __filename = Path(__file__).parent / './ressources/forestfires.csv'
 
     def __init__(self):
         df = pd.read_csv(self.__filename)
