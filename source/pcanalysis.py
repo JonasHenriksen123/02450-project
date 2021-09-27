@@ -1,8 +1,6 @@
 import string
-
 import matplotlib.pyplot as plt
 import numpy as np
-
 import source.Data as Da
 from scipy.linalg import svd
 from matplotlib.pyplot import figure, plot, title, legend, xlabel, ylabel, show
