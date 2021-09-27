@@ -1,9 +1,11 @@
 import string
+
 import matplotlib.pyplot as plt
 import numpy as np
-import source.Data as Da
+from matplotlib.pyplot import figure, plot, title, xlabel, ylabel, show
 from scipy.linalg import svd
-from matplotlib.pyplot import figure, plot, title, legend, xlabel, ylabel, show
+
+import source.Data as Da
 
 
 def plot_attribute_against(data: Da.Data, attribute_x: int, attribute_y: int, plot_title: string):
@@ -19,9 +21,9 @@ def plot_attribute_against(data: Da.Data, attribute_x: int, attribute_y: int, pl
     show()
 
 
-def plot_visualized_data(data: Da.Data):
+def plot_visualized_data(data: Da.Data, plot_title: string):
     x = data.x
-    x_tilda = x - np.ones((data.data_count, 1)) * x.mean(axis=0)
+    x_tilda = x - np.ones((data.N, 1)) * x.mean(axis=0)
     x_tilda = x_tilda * (1 / np.std(x_tilda, 0))
 
     u, s, vh = svd(x_tilda, full_matrices=False)
@@ -31,12 +33,59 @@ def plot_visualized_data(data: Da.Data):
     threshold = 0.90
 
     plt.figure()
+    plt.title(plot_title)
     plt.plot(range(1, len(rho) + 1), rho, 'x-')
     plt.plot(range(1, len(rho) + 1), np.cumsum(rho), 'o-')
     plt.plot([1, len(rho)], [threshold, threshold], 'k--')
     plt.title('Variance explained by principal components')
     plt.xlabel('Principal component')
     plt.ylabel('Variance explained')
-    plt.legend('Individual', 'Cumulative', 'Threshold')
+    plt.legend(['Individual', 'Cumulative', 'Threshold'])
     plt.grid()
+    plt.show()
+
+
+def plot_visualized_pca(data: Da.Data, first_pc: int, second_pc: int, plot_title: string):
+    x = data.x
+    x_tilda = x - np.ones((data.N, 1)) * x.mean(axis=0)
+    x_tilda = x_tilda * (1 / np.std(x_tilda, 0))
+
+    u, s, vh = svd(x_tilda, full_matrices=False)
+    v = vh.T
+    z = x @ v
+
+    plt.figure()
+    plt.title(plot_title)
+    plot(z[:, first_pc], z[:, second_pc], 'o', alpha=0.3)
+    xlabel('PC{0}'.format(first_pc + 1))
+    ylabel('PC{0}'.format(second_pc + 1))
+
+    show()
+
+
+def plot_visualized_coefficients(data: Da.Data, pc_count: int, plot_title: string, legend: bool = True):
+    pcs = [i for i in range(0, pc_count)]
+    legend_strs = ['PC' + str(e + 1) for e in pcs]
+
+    x = data.x
+    x_tilda = x - np.ones((data.N, 1)) * x.mean(axis=0)
+    x_tilda = x_tilda * (1 / np.std(x_tilda, 0))
+
+    u, s, vh = svd(x_tilda, full_matrices=False)
+    v = vh.T
+
+    bw = .2
+    r = np.arange(1, data.M + 1)
+    for i in pcs:
+        plt.bar(r + i * bw, v[:, i], width=bw)
+
+    plt.xticks(r + bw, data.attributes)
+    plt.xlabel('Attributes')
+    plt.ylabel('Component coefficients')
+
+    if legend:
+        plt.legend(legend_strs)
+
+    plt.grid()
+    plt.title(plot_title)
     plt.show()

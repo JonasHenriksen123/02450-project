@@ -7,10 +7,8 @@ if __name__ == '__main__':
 
     pca.plot_attribute_against(data, 0, 1, 'forestfires data')
 
-    print(data.x)
+    pca.plot_visualized_data(data, 'forestfires variance visualized')
 
-    print(data.mean)
-    print(data.std)
-    print(data.min)
-    print(data.median)
-    print(data.max)
+    pca.plot_visualized_pca(data, 0, 1, 'forestfires pca visualization')
+
+    pca.plot_visualized_coefficients(data, 9, 'forestfires coefficient visualisation', legend=False)

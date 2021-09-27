@@ -21,7 +21,7 @@ class Data:
         # endregion
 
         cols = range(0, 13)
-        self.x = self.__raw_data[:, cols]
+        self.x = np.asarray(self.__raw_data[:, cols])
 
         # region index months and week days
         self.month_dict = dict(zip(self.__months, range(1, len(self.__months) + 1)))
@@ -29,7 +29,7 @@ class Data:
 
         aplic_cols = range(2, 4)
 
-        vals = self.__raw_data[:, aplic_cols]
+        vals = np.asarray(self.__raw_data[:, aplic_cols])
 
         for val in vals:
             val[0] = self.month_dict[val[0]]
@@ -37,9 +37,18 @@ class Data:
 
         self.x[:, aplic_cols] = vals
         # endregion
+        self.x = np.asarray(self.x, dtype=float)
 
         self.attributes = np.asarray(df.columns[cols])
-        self.data_count, self.attribute_count = self.x.shape
+        self.N, self.M = self.x.shape
+
+        # region summary statistics
+        self.mean = np.mean(self.x, axis=0).round(2)
+        self.std = np.std(self.x, axis=0).round(2)
+        self.min = np.min(self.x, axis=0)
+        self.median = np.median(self.x, axis=0)
+        self.max = np.max(self.x, axis=0)
+        # endregion
 
     def get_column_range(self, col_range: range):
         return self.x[:, col_range]
