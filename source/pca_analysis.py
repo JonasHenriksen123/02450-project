@@ -25,7 +25,7 @@ doc = xlrd.open_workbook(Path(__file__).parent / 'ressources/forestfires.xls').s
 attributeNames = doc.row_values(0, 0, 12)
 # print(attributeNames)
 
-# ONE-OUT-OF-k_ENCODINGS
+# ONE-OUT-OF-k-ENCODINGS
 month = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 monthDict = dict(zip(month, range(1, len(month) + 1)))
 week = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -78,7 +78,7 @@ X = np.hstack((X_first, X_second, X))
 # # Compute values of N, M and C.
 N, M = X.shape
 C = len(classNames)
-
+print(X)
 # %%
 #
 # VISUALIZE DATA
