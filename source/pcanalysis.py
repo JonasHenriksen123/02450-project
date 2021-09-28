@@ -9,12 +9,11 @@ import source.Data as Da
 
 
 def plot_attribute_against(data: Da.Data, attribute_x: int, attribute_y: int, plot_title: string):
-    cols = [attribute_x, attribute_y]
-    col_data = data.get_columns(cols)
-
     f = figure()
     title(plot_title)
-    plot(col_data[0], col_data[1], 'o', alpha=.1)
+    for c in range(data.C):
+        class_mask = data.y == c
+        plot(data.x2[class_mask, attribute_x], data.x2[class_mask, attribute_y], 'o', alpha=1)
 
     xlabel(data.attributes[attribute_x])
     ylabel(data.attributes[attribute_y])
@@ -23,6 +22,8 @@ def plot_attribute_against(data: Da.Data, attribute_x: int, attribute_y: int, pl
 
 def plot_visualized_data(data: Da.Data, plot_title: string):
     x_tilda = data.y2
+
+    print(data.y2.shape)
 
     u, s, vh = svd(x_tilda, full_matrices=False)
 
@@ -48,11 +49,13 @@ def plot_visualized_pca(data: Da.Data, first_pc: int, second_pc: int, plot_title
 
     u, s, vh = svd(x_tilda, full_matrices=False)
     v = vh.T
-    z = data.x @ v
+    z = data.y2 @ v
 
     plt.figure()
     plt.title(plot_title)
-    plot(z[:, first_pc], z[:, second_pc], 'o', alpha=0.3)
+    for c in range(data.C):
+        class_mask = data.y == c
+        plot(z[class_mask, first_pc], z[class_mask, second_pc], 'o', alpha=1)
     xlabel('PC{0}'.format(first_pc + 1))
     ylabel('PC{0}'.format(second_pc + 1))
 
@@ -69,7 +72,7 @@ def plot_visualized_coefficients(data: Da.Data, pc_count: int, plot_title: strin
     v = vh.T
 
     bw = .2
-    r = np.arange(1, data.M + 1)
+    r = np.arange(1, data.M)
     for i in pcs:
         plt.bar(r + i * bw, v[:, i], width=bw)
 

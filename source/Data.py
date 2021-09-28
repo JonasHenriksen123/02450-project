@@ -23,6 +23,23 @@ class Data:
         cols = range(0, 13)
         self.x = np.asarray(self.__raw_data[:, cols])
 
+        labels = np.asarray(self.x[:, 12])
+        temp = []
+        for label in labels:
+            if label == 0:
+                temp.append(0)
+            else:
+                temp.append(1)
+
+        labels = temp
+        names = sorted(set(labels))
+        self.class_dict = dict(zip(names, (range(len(names)))))
+
+        self.x[:, 12] = labels
+
+        self.y = np.asarray(([self.class_dict[value] for value in labels]))
+
+
         # region index months and week days
         self.month_dict = dict(zip(self.__months, range(1, len(self.__months) + 1)))
         self.week_days_dict = dict(zip(self.__week_days, range(1, len(self.__week_days) + 1)))
@@ -38,9 +55,12 @@ class Data:
         self.x[:, aplic_cols] = vals
         # endregion
         self.x = np.asarray(self.x, dtype=float)
+        self.x2 = self.x[:, range(0, 12)]
 
-        self.attributes = np.asarray(df.columns[cols])
+
+        self.attributes = np.asarray(df.columns[range(12)])
         self.N, self.M = self.x.shape
+        self.C = len(names)
 
         # region summary statistics
         self.mean = np.mean(self.x, axis=0).round(2)
@@ -50,10 +70,12 @@ class Data:
         self.median = np.median(self.x, axis=0)
         self.q3 = np.quantile(self.x, 0.75, axis=0)
         self.max = np.max(self.x, axis=0)
+        self.range = np.max(self.x, axis=0) - np.min(self.x, axis=0)
         # endregion
 
-        self.y1 = self.x - np.ones((self.N, 1)) * self.x.mean(axis=0)
+        self.y1 = self.x2 - np.ones((self.N, 1)) * self.x2.mean(axis=0)
         self.y2 = self.y1 * 1 / np.std(self.y1, axis=0)
+
 
     def get_column_range(self, col_range: range):
         return self.x[:, col_range]
