@@ -22,9 +22,7 @@ def plot_attribute_against(data: Da.Data, attribute_x: int, attribute_y: int, pl
 
 
 def plot_visualized_data(data: Da.Data, plot_title: string):
-    x = data.x
-    x_tilda = x - np.ones((data.N, 1)) * x.mean(axis=0)
-    x_tilda = x_tilda * (1 / np.std(x_tilda, 0))
+    x_tilda = data.y2
 
     u, s, vh = svd(x_tilda, full_matrices=False)
 
@@ -46,13 +44,11 @@ def plot_visualized_data(data: Da.Data, plot_title: string):
 
 
 def plot_visualized_pca(data: Da.Data, first_pc: int, second_pc: int, plot_title: string):
-    x = data.x
-    x_tilda = x - np.ones((data.N, 1)) * x.mean(axis=0)
-    x_tilda = x_tilda * (1 / np.std(x_tilda, 0))
+    x_tilda = data.y2
 
     u, s, vh = svd(x_tilda, full_matrices=False)
     v = vh.T
-    z = x @ v
+    z = data.x @ v
 
     plt.figure()
     plt.title(plot_title)
@@ -67,9 +63,7 @@ def plot_visualized_coefficients(data: Da.Data, pc_count: int, plot_title: strin
     pcs = [i for i in range(0, pc_count)]
     legend_strs = ['PC' + str(e + 1) for e in pcs]
 
-    x = data.x
-    x_tilda = x - np.ones((data.N, 1)) * x.mean(axis=0)
-    x_tilda = x_tilda * (1 / np.std(x_tilda, 0))
+    x_tilda = data.y2
 
     u, s, vh = svd(x_tilda, full_matrices=False)
     v = vh.T

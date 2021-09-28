@@ -46,9 +46,14 @@ class Data:
         self.mean = np.mean(self.x, axis=0).round(2)
         self.std = np.std(self.x, axis=0).round(2)
         self.min = np.min(self.x, axis=0)
+        self.q1 = np.quantile(self.x, 0.25, axis=0)
         self.median = np.median(self.x, axis=0)
+        self.q3 = np.quantile(self.x, 0.75, axis=0)
         self.max = np.max(self.x, axis=0)
         # endregion
+
+        self.y1 = self.x - np.ones((self.N, 1)) * self.x.mean(axis=0)
+        self.y2 = self.y1 * 1 / np.std(self.y1, axis=0)
 
     def get_column_range(self, col_range: range):
         return self.x[:, col_range]
