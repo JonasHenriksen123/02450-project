@@ -22,7 +22,9 @@ class Data:
 
         cols = range(0, 13)
         self.x = np.asarray(self.__raw_data[:, cols])
+        self.x_no_label = self.x
 
+        # region create labeling
         labels = np.asarray(self.x[:, 12])
         temp = []
         for label in labels:
@@ -38,7 +40,7 @@ class Data:
         self.x[:, 12] = labels
 
         self.y = np.asarray(([self.class_dict[value] for value in labels]))
-
+        # endregion
 
         # region index months and week days
         self.month_dict = dict(zip(self.__months, range(1, len(self.__months) + 1)))
@@ -57,8 +59,21 @@ class Data:
         self.x = np.asarray(self.x, dtype=float)
         self.x2 = self.x[:, range(0, 12)]
 
-
         self.attributes = np.asarray(df.columns[range(12)])
+        self.attribute_units = ['coordinate',
+                                'coordinate',
+                                'month',
+                                'day',
+                                'FFMC index',
+                                'DMC index',
+                                'DC index',
+                                'ISI index',
+                                '°C',
+                                '%',
+                                'km/h',
+                                'mm/m^2',
+                                'ha']
+
         self.N, self.M = self.x.shape
         self.C = len(names)
 

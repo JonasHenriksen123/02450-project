@@ -5,10 +5,12 @@ if __name__ == '__main__':
 
     data = Da.Data()
 
-    pca.plot_attribute_against(data, 4, 5, 'forestfires data')
+    #pca.plot_attribute_against(data, 4, 7, '')
 
-    pca.plot_visualized_data(data, 'forestfires variance visualized')
+    #pca.plot_visualized_data(data, '')
 
-    pca.plot_visualized_pca(data, 0, 1, 'forestfires pca visualization')
+    pca.plot_visualized_coefficients(data, 3, '', legend=True)
 
-    pca.plot_visualized_coefficients(data, 3, 'forestfires coefficient visualisation', legend=True)
+    #pca.plot_boxplots(data, 'forestfires boxplots')
+
+    #pca.plot_boxplot(data, 6, 'forestfires boxplot DC')
