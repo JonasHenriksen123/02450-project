@@ -1,5 +1,7 @@
 import source.Data as Da
 import source.pcanalysis as pca
+import source.regression as re
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -17,15 +19,7 @@ if __name__ == '__main__':
 
 #     pca.plot_boxplot(data, 6, 'forestfires boxplot DC')
 #     # endregion
-
-    pca.plot_box_plot(data)
-    
-    pca.plot_distribution(data)
-  
-    pca.plot_correlation_matrix(data)    
-
-    pca.plot_pca(data)
-
-    pca.plot_pca_coeff(data)
-    
-    pca.plot_cum_variance(data)
+    ran = range(0, 10)
+    for ra in ran:
+        delta_range = np.power(10., range(-2, 8))
+        re.least_squares_regression(data, 10, delta_range)

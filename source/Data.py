@@ -21,14 +21,19 @@ class Data:
 
         cols = range(0, 13)
         self.x = np.asarray(self.__raw_data[:, cols])
+
         self.x_no_label = self.x
 
         # region create labeling
         labels = np.asarray(self.x[:, 12])
         self.df = np.asarray(self.__raw_data[:, cols])
+        np.random.shuffle(self.df)
         self.x = self.df[:,:12]
+
         
         labels = np.asarray(self.df[:,12])
+
+        self.y1 = np.asarray(labels.astype('float64'))
         
         temp = []
         for label in labels:
