@@ -24,7 +24,7 @@ if __name__ == '__main__':
   
     pca.plot_correlation_matrix(data)    
 
-    pca.plot_PCA(data)
+    pca.plot_pca(data)
 
     pca.plot_pca_coeff(data)
     

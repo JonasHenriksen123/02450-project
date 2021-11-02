@@ -1,11 +1,15 @@
 import string
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.pyplot import figure, plot, title, xlabel, ylabel, show, boxplot, xticks
 from scipy.linalg import svd
-
+import pandas as pd
+import seaborn as sns
+import plotly.express as px
+import plotly.io as pio
 import source.Data as Da
+pio.renderers.default = 'svg'
+pio.templates
 
 
 def plot_attribute_against(data: Da.Data, attribute_x: int, attribute_y: int, plot_title: string):
@@ -106,15 +110,7 @@ def plot_boxplot(data: Da.Data, attr: int, plot_title: string):
     ylabel(data.attribute_units[attr])
     title(plot_title)
     show()
-    
-import pandas as pd
-import seaborn as sns
-import plotly as py
-import plotly.express as px 
-import plotly.graph_objects as go
-import plotly.io as pio
-pio.renderers.default = 'svg'
-pio.templates
+
 
 def plot_box_plot(data: Da.Data):
     
@@ -132,6 +128,7 @@ def plot_box_plot(data: Da.Data):
     fig.update_xaxes(title='', visible=True, showticklabels=True)
     fig.update_xaxes(tickangle=30)
     fig.show()
+
     
 def plot_correlation_matrix(data: Da.Data):    
     corr = data.df_entire.corr()
@@ -148,6 +145,7 @@ def plot_correlation_matrix(data: Da.Data):
                               'temp','RH','wind','rain','area'),rotation=45);
     g.set_xticklabels(labels=data.df_attributes,rotation=30);
     # g.set_yticklabels(labels=data.df_attributes, rotation=30, horizontalalignment='left')
+
     
 def plot_cum_variance(data: Da.Data):
     
@@ -189,8 +187,9 @@ def plot_cum_variance(data: Da.Data):
     plt.show()
     
     print('Cumulative normalized var: ', np.cumsum(rho))
-    
-def plot_PCA(data: Da.Data):
+
+
+def plot_pca(data: Da.Data):
     
     # not normailized data
     data.df_data = data.df_data - data.df_data.mean(axis=0)
@@ -225,7 +224,8 @@ def plot_PCA(data: Da.Data):
     plt.ylabel("PCA2",fontsize=20)
     plt.legend(title="Burnead area",fontsize=12, loc ="lower left")
     plt.show()
-    
+
+
 def plot_pca_coeff(data: Da.Data):
 
     # not normailized data
