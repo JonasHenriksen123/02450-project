@@ -134,7 +134,7 @@ def plot_box_plot(data: Da.Data):
     fig.show()
     
 def plot_correlation_matrix(data: Da.Data):    
-    corr = data.df_entire.corr()
+    corr = data.df.corr()
     
     figure, ax = plt.subplots(figsize=(14, 10))
     plt.xticks(fontsize=17,weight='bold')
@@ -144,9 +144,11 @@ def plot_correlation_matrix(data: Da.Data):
     cmap= "YlGnBu_r"
     g = sns.heatmap(corr, annot=True,mask=np.zeros_like(corr, dtype=np.bool), cmap=cmap ,
                 square=True,ax=ax);
-    g.set_xticklabels(labels=('X','Y','month','day','FFMC','DMC','DC','ISI',
+    # g.set_xticklabels(labels=('X','Y','month','day','FFMC','DMC','DC','ISI',
+    #                           'temp','RH','wind','rain','area'),rotation=45);
+    g.set_xticklabels(labels=('FFMC','DMC','DC','ISI',
                               'temp','RH','wind','rain','area'),rotation=45);
-    g.set_xticklabels(labels=data.df_attributes,rotation=30);
+    g.set_yticklabels(labels=data.df_attributes,rotation=30);
     # g.set_yticklabels(labels=data.df_attributes, rotation=30, horizontalalignment='left')
     
 def plot_cum_variance(data: Da.Data):
