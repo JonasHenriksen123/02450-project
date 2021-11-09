@@ -1,6 +1,7 @@
 import source.Data as Da
 import source.pcanalysis as pca
 import source.regression as re
+import source.classification as cl
 import numpy as np
 
 if __name__ == '__main__':
@@ -19,7 +20,8 @@ if __name__ == '__main__':
 
 #     pca.plot_boxplot(data, 6, 'forestfires boxplot DC')
 #     # endregion
-    ran = range(0, 10)
-    for ra in ran:
-        delta_range = np.power(10., range(-2, 8))
-        re.least_squares_regression(data, 10, delta_range)
+#    ran = range(0, 10)
+#    for ra in ran:
+#        delta_range = np.power(10., range(-2, 8))
+#        re.least_squares_regression(data, 10, delta_range)
+    cl.baseline(data, 10)
