@@ -47,10 +47,11 @@ class Data:
                 temp.append(1)
 
         labels = temp
-        names = sorted(set(labels))
-        self.class_dict = dict(zip(names, (range(len(names)))))
+        self.names = sorted(set(labels))
+        self.class_dict = dict(zip(self.names, (range(len(self.names)))))
 
         self.df[:, 12] = labels
+        self.x3 = self.df
         self.y = np.asarray(([self.class_dict[value] for value in labels]))
         # endregion
 
@@ -113,7 +114,7 @@ class Data:
                                 'ha']
 
         self.N, self.M = self.x.shape
-        self.C = len(names)
+        self.C = len(self.names)
 
         # region summary statistics
         self.mean = np.mean(self.x, axis=0)
@@ -265,7 +266,7 @@ class Data:
         # self.df = self.df.iloc[:,4:]
         self.df = self.df.iloc[:,4:13]
         self.df_attributes = list(self.df.columns)
-        self.y = self.df['area']
+        self.y1 = self.df['area']
         self.df = self.df.drop('area',axis=1)
         self.df['area'] = np.array(self.y)
         # print(self.df)

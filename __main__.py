@@ -24,4 +24,4 @@ if __name__ == '__main__':
 #    for ra in ran:
 #        delta_range = np.power(10., range(-2, 8))
 #        re.least_squares_regression(data, 10, delta_range)
-    cl.baseline(data, 10)
+    cl.logistic_regression(data, 10)
