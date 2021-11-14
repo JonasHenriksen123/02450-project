@@ -2,7 +2,7 @@ import source.Data as Da
 import source.pcanalysis as pca
 import source.regression as re
 import source.classification as cl
-import numpy as np
+
 
 if __name__ == '__main__':
 
@@ -24,4 +24,11 @@ if __name__ == '__main__':
 #    for ra in ran:
 #        delta_range = np.power(10., range(-2, 8))
 #        re.least_squares_regression(data, 10, delta_range)
-    cl.logistic_regression(data, 10)
+#    cl.logistic_regression(data, 10)
+#    cl.k_nearest_neighbours(data, 10, 40)
+#    cl.baseline(data, 5)
+#    cl.two_layer_cross_validation(data, 10, 5, True)
+#    cl.mcnemera(data, 10, True)
+    cl.train_log_model(data, 5.689866029018293, True)
+
+#    cl.test(data)
