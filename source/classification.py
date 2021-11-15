@@ -27,7 +27,7 @@ def logistic_regression(data: Da.Data, k_folds: int):
     X_train = X_train / sigma
     X_test = (X_test - mu) / sigma
 
-    lambda_interval = np.logspace(-3, 5, 50)
+    lambda_interval = np.logspace(-1, 3, 50)
     train_error_rate = np.zeros(len(lambda_interval))
     test_error_rate = np.zeros(len(lambda_interval))
     coefficient_norm = np.zeros(len(lambda_interval))
@@ -169,7 +169,7 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
         X = (X - mu) / sigma
 
     # log_reg complexity parameter (lambda)
-    lambda_interval = np.logspace(-3, 5, 50)
+    lambda_interval = np.logspace(-1, 3, 50)
 
     # k_nearest complexity parameter (max neighbours)
     max_neighbours = 20
@@ -373,7 +373,6 @@ def mcnemera(data: Da.Data, k_fold: int, regularize: bool = False):
         else:
             c = 1
 
-        i = 0
         y_est = []
         for x in X_test:
             y_est.append(c)
@@ -391,17 +390,17 @@ def mcnemera(data: Da.Data, k_fold: int, regularize: bool = False):
     y_true = np.concatenate(y_true)
 
     alpha = 0.05
-    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 0], yhat[:, 1], alpha=alpha)
+    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 1], yhat[:, 0], alpha=alpha)
 
-    print("theta = theta_Log VS. theta_K_near point estimate", thetahat, " CI: ", CI, "p-value", p)
+    print("theta = theta_K_near - theta_Log  point estimate", thetahat, " CI: ", CI, "p-value", p)
 
-    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 0], yhat[:, 2], alpha=alpha)
+    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 2], yhat[:, 0], alpha=alpha)
 
-    print("theta = theta_Log VS. theta_Baseline point estimate", thetahat, " CI: ", CI, "p-value", p)
+    print("theta = theta_Baseline - theta_Log point estimate", thetahat, " CI: ", CI, "p-value", p)
 
-    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 1], yhat[:, 2], alpha=alpha)
+    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 2], yhat[:, 1], alpha=alpha)
 
-    print("theta = theta_K_near VS. theta_Baseline point estimate", thetahat, " CI: ", CI, "p-value", p)
+    print("theta = theta_Baseline - theta_K_near point estimate", thetahat, " CI: ", CI, "p-value", p)
 
 
 def train_log_model(data: Da.Data, lambda_val: float, regularize: bool = False):
