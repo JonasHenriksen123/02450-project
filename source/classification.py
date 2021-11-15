@@ -7,10 +7,11 @@ from matplotlib.pylab import (figure, semilogx, loglog, xlabel, ylabel, legend, 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from toolbox_02450 import mcnemar
+import pandas as pd
 
 
 def logistic_regression(data: Da.Data, k_folds: int):
-    X = data.x2[:, range(0, 11)]
+    X = data.x2
     y = data.y.squeeze()
     classNames = data.class_dict
     N = data.N
@@ -20,14 +21,14 @@ def logistic_regression(data: Da.Data, k_folds: int):
     K = k_folds
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.95, stratify=y)
 
-    mu = np.mean(X_train, 0)
-    sigma = np.std(X_train, 0)
+    mu = np.mean(X, 0)
+    sigma = np.std(X, 0)
 
     X_train = (X_train - mu)
     X_train = X_train / sigma
     X_test = (X_test - mu) / sigma
 
-    lambda_interval = np.logspace(-1, 3, 50)
+    lambda_interval = np.logspace(1, 3, 50)
     train_error_rate = np.zeros(len(lambda_interval))
     test_error_rate = np.zeros(len(lambda_interval))
     coefficient_norm = np.zeros(len(lambda_interval))
@@ -48,6 +49,8 @@ def logistic_regression(data: Da.Data, k_folds: int):
     min_error = np.min(test_error_rate)
     opt_lambda_idx = np.argmin(test_error_rate)
     opt_lambda = lambda_interval[opt_lambda_idx]
+
+    print(opt_lambda)
 
     plt.figure(figsize=(8, 8))
     plt.semilogx(lambda_interval, train_error_rate * 100)
@@ -169,10 +172,14 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
         X = (X - mu) / sigma
 
     # log_reg complexity parameter (lambda)
-    lambda_interval = np.logspace(-1, 3, 50)
+    lambda_interval = np.logspace(1, 3, 50)
 
     # k_nearest complexity parameter (max neighbours)
     max_neighbours = 20
+
+    # statistical evaluation
+    yhat = []
+    y_true = []
 
     CV_outer = model_selection.KFold(k_outerfold, shuffle=True)
     CV_inner = model_selection.KFold(k_innerfold, shuffle=True)
@@ -198,6 +205,9 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
         # log_reg need
         log_reg_errors = np.zeros((k_innerfold, len(lambda_interval)))
 
+        # statistical evaluation
+        dy = []
+
         inner_i = 0
         for inner_train_index, inner_test_index in CV_inner.split(outer_X_train, outer_y_train):
             inner_X_train = outer_X_train[inner_train_index, :]
@@ -208,13 +218,13 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
             test_size += inner_test_index.size
 
             # region log_reg
-            reg_X_train = inner_X_train[:, range(0, 11)]
-            reg_X_test = inner_X_test[:, range(0, 11)]
+            # reg_X_train = inner_X_train[:, range(0, 11)]
+            # reg_X_test = inner_X_test[:, range(0, 11)]
             for k in range(0, len(lambda_interval)):
                 mdl = LogisticRegression(penalty='l2', C=1 / lambda_interval[k])
-                mdl.fit(reg_X_train, inner_y_train)
+                mdl.fit(inner_X_train, inner_y_train)
 
-                y_test_est = mdl.predict(reg_X_test).T
+                y_test_est = mdl.predict(inner_X_test).T
                 log_reg_errors[inner_i, k] = np.sum(y_test_est[:] != inner_y_test[:])
             # endregion
 
@@ -240,12 +250,13 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
             inner_i += 1
 
         # train best model again
-        reg_X_train = outer_X_train[:, range(0, 11)]
-        reg_X_test = outer_X_test[:, range(0, 11)]
+        # reg_X_train = outer_X_train[:, range(0, 11)]
+        # reg_X_test = outer_X_test[:, range(0, 11)]
         mdl = LogisticRegression(penalty='l2', C=1 / lambda_interval[low_index])
-        mdl.fit(reg_X_train, outer_y_train)
+        mdl.fit(outer_X_train, outer_y_train)
 
-        y_test_est = mdl.predict(reg_X_test).T
+        y_test_est = mdl.predict(outer_X_test).T
+        dy.append(y_test_est)
         errors[i, 0] = 100 * np.sum(y_test_est[:] != outer_y_test[:]) / outer_y_test.size
         gen_errors[i, 0] = errors[i, 0] * outer_y_test.size
         params[i, 0] = lambda_interval[low_index]
@@ -266,6 +277,7 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
         knclassifier.fit(outer_X_train, outer_y_train)
 
         y_est = knclassifier.predict(outer_X_test)
+        dy.append(y_est)
         errors[i, 1] = 100 * np.sum(y_est[:] != outer_y_test[:]) / outer_y_test.size
         gen_errors[i, 1] = errors[i, 1] * outer_y_test.size
         params[i, 1] = low_index
@@ -287,14 +299,24 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
             c = 1
 
         # test classifier
+        y_est = []
         err = 0
         for yh in outer_y_test:
             if c != yh:
                 err += 1
 
+        for x in outer_y_test:
+            y_est.append(c)
+
+        dy.append(y_est)
+
         errors[i, 2] = 100 * err / outer_y_test.size
         gen_errors[i, 2] = errors[i, 2] * outer_y_test.size
         # endregion
+
+        dy = np.stack(dy, axis=1)
+        yhat.append(dy)
+        y_true.append(outer_y_test)
 
         i += 1
 
@@ -309,6 +331,21 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
     k_near_general = np.sum(gen_errors[:, 1] / outer_test_size)
     baseline_general = np.sum(gen_errors[:, 2] / outer_test_size)
     print("Log_gen_err: {0}, k_near_gen_err: {1}, baseline_gen_err: {2}".format(log_reg_general, k_near_general, baseline_general))
+
+    yhat = np.concatenate(yhat)
+    y_true = np.concatenate(y_true)
+    alpha = 0.05
+    print("theta_K_near - theta_Log")
+    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 1], yhat[:, 0], alpha=alpha)
+    print("theta ", thetahat)
+
+    print("theta_Baseline - theta_Log")
+    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 2], yhat[:, 0], alpha=alpha)
+    print("theta ", thetahat)
+
+    print("theta_Baseline - theta_K_near")
+    [thetahat, CI, p] = mcnemar(y_true, yhat[:, 2], yhat[:, 1], alpha=alpha)
+    print("theta ", thetahat)
 
 
 def mcnemera(data: Da.Data, k_fold: int, regularize: bool = False):
@@ -404,7 +441,7 @@ def mcnemera(data: Da.Data, k_fold: int, regularize: bool = False):
 
 
 def train_log_model(data: Da.Data, lambda_val: float, regularize: bool = False):
-    X = data.x2[:, range(0, 11)]
+    X = data.x2
     y = data.y.squeeze()
 
     if regularize:
@@ -416,3 +453,15 @@ def train_log_model(data: Da.Data, lambda_val: float, regularize: bool = False):
     mdl.fit(X, y)
 
     print(np.round(mdl.coef_, 2))
+
+    Weights = pd.DataFrame(mdl.coef_)
+    #Weights['Features'] = pd.Series(['X', 'Y', 'Month', 'Day', 'FFMC', 'DMC', 'DC', 'ISI',
+    #                                 'temp', 'RH', 'wind', 'rain'])
+    Weights_opt = Weights.stack()
+
+    #Weights_opt.drop(index=0, inplace=True)
+    ax = Weights_opt.plot(kind='bar', figsize=(15, 10), legend=False, fontsize=25)
+    ax.set_xticklabels(['X', 'Y', 'Month', 'Day', 'FFMC', 'DMC', 'DC', 'ISI', 'temp', 'RH', 'wind', 'rain'])
+    plt.xticks(rotation=-30)
+    plt.ylabel('Weights', fontsize=25)
+    plt.show()
