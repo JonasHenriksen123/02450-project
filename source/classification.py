@@ -11,7 +11,7 @@ import pandas as pd
 
 
 def logistic_regression(data: Da.Data, k_folds: int):
-    X = data.x2
+    X = data.x2[:, range(4, 12)]
     y = data.y.squeeze()
     classNames = data.class_dict
     N = data.N
@@ -19,7 +19,7 @@ def logistic_regression(data: Da.Data, k_folds: int):
     C = len(classNames)
 
     K = k_folds
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.95, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.9, stratify=y)
 
     mu = np.mean(X, 0)
     sigma = np.std(X, 0)
@@ -28,7 +28,7 @@ def logistic_regression(data: Da.Data, k_folds: int):
     X_train = X_train / sigma
     X_test = (X_test - mu) / sigma
 
-    lambda_interval = np.logspace(1, 3, 50)
+    lambda_interval = np.logspace(0, 3, 50)
     train_error_rate = np.zeros(len(lambda_interval))
     test_error_rate = np.zeros(len(lambda_interval))
     coefficient_norm = np.zeros(len(lambda_interval))
@@ -76,7 +76,7 @@ def logistic_regression(data: Da.Data, k_folds: int):
 
 
 def k_nearest_neighbours(data: Da.Data, k_folds, max_neighbours: int):
-    X = data.x2
+    X = data.x2[:, range(4, 12)]
     y = data.y
 
     CV = model_selection.KFold(k_folds, shuffle=True)
@@ -120,7 +120,7 @@ def test(data: Da.Data):
 
 
 def baseline(data: Da.Data, k_folds: int):
-    X = data.x2
+    X = data.x2[:, range(4, 12)]
     y = data.y
     N = data.N
 
@@ -162,7 +162,7 @@ def baseline(data: Da.Data, k_folds: int):
 
 
 def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int, regularize: bool = False):
-    X = data.x2
+    X = data.x2[:, range(4, 12)]
     y = data.y.squeeze()
     N = data.N
 
@@ -349,7 +349,7 @@ def two_layer_cross_validation(data: Da.Data, k_outerfold: int, k_innerfold: int
 
 
 def mcnemera(data: Da.Data, k_fold: int, regularize: bool = False):
-    X = data.x2
+    X = data.x2[:, range(4, 12)]
     y = data.y.squeeze()
     N = data.N
 
@@ -441,7 +441,7 @@ def mcnemera(data: Da.Data, k_fold: int, regularize: bool = False):
 
 
 def train_log_model(data: Da.Data, lambda_val: float, regularize: bool = False):
-    X = data.x2
+    X = data.x2[:, range(4, 12)]
     y = data.y.squeeze()
 
     if regularize:
@@ -454,14 +454,14 @@ def train_log_model(data: Da.Data, lambda_val: float, regularize: bool = False):
 
     print(np.round(mdl.coef_, 2))
 
-    Weights = pd.DataFrame(mdl.coef_)
+    Weights = pd.DataFrame(np.round(mdl.coef_, 2))
     #Weights['Features'] = pd.Series(['X', 'Y', 'Month', 'Day', 'FFMC', 'DMC', 'DC', 'ISI',
     #                                 'temp', 'RH', 'wind', 'rain'])
     Weights_opt = Weights.stack()
 
     #Weights_opt.drop(index=0, inplace=True)
     ax = Weights_opt.plot(kind='bar', figsize=(15, 10), legend=False, fontsize=25)
-    ax.set_xticklabels(['X', 'Y', 'Month', 'Day', 'FFMC', 'DMC', 'DC', 'ISI', 'temp', 'RH', 'wind', 'rain'])
+    ax.set_xticklabels(['FFMC', 'DMC', 'DC', 'ISI', 'temp', 'RH', 'wind', 'rain'])
     plt.xticks(rotation=-30)
     plt.ylabel('Weights', fontsize=25)
     plt.show()
