@@ -34,9 +34,8 @@ from datetime import datetime
 import source.Data as Da
 
 # import source.Data as Da
-def regression():
-    
-    data = Da.Data()
+def regression(data: Da.Data):
+
     ## ========================================================================================================================================
     # Separating the data in X and y format. Also applying K-fold cross validation
     # ========================================================================================================================================
@@ -54,12 +53,13 @@ def regression():
     
     N, M = X.shape
     K = 10
-    random_seed = 0
+    random_seed = 10
     CV = model_selection.KFold(K, shuffle=True, random_state=random_seed)
     # CV = model_selection.KFold(K, shuffle=False)
     
     # Values of lambda
     lambdas = np.power(10.,range(-2,10))
+    # lambdas = [300,400,500,600,700,800,900]
     
     # Initialize variables
     #T = len(lambdas)
@@ -91,16 +91,7 @@ def regression():
         X_test = X[test_index]
         y_test = y[test_index] 
         internal_cross_validation = 10
-        #  RETURNED VALUE FROM rlr_validate
-        # opt_val_err = np.min(np.mean(test_error,axis=0))
-        '''The optimal lambda is choosen as the one that give the lowest mean test error'''
-        # opt_lambda = lambdas[np.argmin(np.mean(test_error,axis=0))]         
-        # train_err_vs_lambda = np.mean(train_error,axis=0)
-        # test_err_vs_lambda = np.mean(test_error,axis=0)
-        # mean_w_vs_lambda = np.squeeze(np.mean(w,axis=1))
 
-        # print(X_train)
-        # print(y_train)
 
         opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_train, y_train, lambdas, internal_cross_validation)
         print(opt_lambda)
@@ -140,8 +131,6 @@ def regression():
         Error_train[k] = np.square(y_train-X_train @ w_noreg[:,k]).sum(axis=0)/y_train.shape[0]
         Error_test[k] = np.square(y_test-X_test @ w_noreg[:,k]).sum(axis=0)/y_test.shape[0]
         
-        # yhat_baseline  = np.ones((y_test.shape[0],1))*(np.mean(y_train)).squeeze()
-        # Error_test_baseline[k] = np.square(y_test-yhat_baseline.T).sum(axis=1)/y_test.shape[0]
         
         k+=1
 
@@ -156,8 +145,7 @@ def regression():
     plt.ylabel('Mean Coefficient Values',fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
-    plt.legend(['X','Y','month','day','FFMC','DMC','DC','ISI',
-                      'temp','RH','wind','rain'],fontsize=17)
+    plt.legend(data.df_attributes[:-2],fontsize=17)
             
     plt.subplot(1,2,2)
     plt.title('Optimal lambda: 1e{0}'.format(np.log10(Arr_opt_lambda[k][0])),fontsize=17)
@@ -169,11 +157,6 @@ def regression():
     plt.legend(['Train error','Validation error'],fontsize=17)
     plt.show()
     
-    # print('Mean squared wihtout features:')
-    # print('- Training error: {0}'.format(Error_train_nofeatures.mean()))
-    # print('- Test error:     {0}'.format(Error_test_nofeatures.mean()))
-    # print('- R^2 train:     {0}'.format((Error_train_nofeatures.sum()-Error_train.sum())/Error_train_nofeatures.sum()))
-    # print('- R^2 test:     {0}\n'.format((Error_test_nofeatures.sum()-Error_test.sum())/Error_test_nofeatures.sum()))
     print('Linear regression without feature selection:')
     print('- Training error: {0}'.format(Error_train.mean()))
     print('- Test error:     {0}'.format(Error_test.mean()))
@@ -197,149 +180,478 @@ def regression():
     plt.xticks(rotation=-30)
     plt.ylabel('Weights' , fontsize=25)
     
-    # data = Da.Data()
-    # # ========================================================================================================================================
-    # # Separating the data in X and y format. Also applying K-fold cross validation
-    # # ========================================================================================================================================
-    # X = data.df_data
-    # X = np.array(X)
+def trial_regr(data: Da.Data):
+    # Trial
+    data = Da.Data()
+    # ========================================================================================================================================
+    # Separating the data in X and y format. Also applying K-fold cross validation
+    # ========================================================================================================================================
+    X = data.df
+    X = X.drop('area',axis=1)
+    X = np.array(X)
+    y = data.df['area']
+    yTrans = np.log(y+1)
+    y = yTrans    
+    y = [np.array(y)]
+    y = np.transpose(y)
     
-    # y = data.df_original['area']
-    # y = np.array(y)
-    # yTrans = np.log(y+1)
-    # y = yTrans    
-      
-    # # Add offset attribute
-    # X = np.concatenate((np.ones((X.shape[0],1)),X),1)
-    # attributeNames = ['Offset'] + data.df_attributes
+    model = LinearRegression()
+    model.fit(X,y)
     
-    # N, M = X.shape
-    # K = 10
-    # random_seed = 42
-    # CV = model_selection.KFold(K, shuffle=True, random_state=random_seed)
-    # # CV = model_selection.KFold(K, shuffle=False)
     
-    # # Values of lambda
-    # lambdas = np.power(10.,range(-2,10))
+    y_est = []
+    residual = []
+    mean =[]
+    min1 =[]
+    max1 = []
+    K_1 = 10
+    CV_1 = model_selection.KFold(n_splits=K_1 , shuffle=True)
+    k_inner=0
+    for train_inner_index, test_inner_index in CV_1.split(X):
+       
+       # Extract training and test set for current CV fold
+       X_train_inner, y_train_inner = X[train_inner_index,:], y[train_inner_index]
+       X_test_inner, y_test_inner = X[test_inner_index,:], y[test_inner_index]        
+   
+       model = sklearn.linear_model.Ridge(alpha=1000)
+       model = model.fit(X_train_inner,y_train_inner)
+       y_est_test_inner_linear = model.predict(X_test_inner)
+       for el in y_est_test_inner_linear:
+           y_est.append(el[0])
+       for i in range(len(y_est_test_inner_linear)):    
+           residual.append(y_est_test_inner_linear[i][0] - y_test_inner[i][0])
+       mean.append(np.mean(y_est_test_inner_linear))
+       min1.append(np.min(y_est_test_inner_linear))
+       max1.append(np.max(y_est_test_inner_linear))
+       
     
-    # # Initialize variables
-    # #T = len(lambdas)
-    # Error_train = np.empty((K,1))
-    # Error_test = np.empty((K,1))
-    # Error_train_rlr = np.empty((K,1))
-    # Error_test_rlr = np.empty((K,1))
-    # Error_train_nofeatures = np.empty((K,1))
-    # Error_test_nofeatures = np.empty((K,1))
-    # Error_test_baseline = np.empty((K,1))
-    # w_rlr = np.empty((M,K))
-    # mu = np.empty((K, M-1))
-    # sigma = np.empty((K, M-1))
-    # w_noreg = np.empty((M,K))
+    y_est = np.asarray(y_est)
+    residual = np.asarray(residual)
+    print("mean: ",np.mean(y_est))
+    print("min: ",np.min(y_est))
+    print("max: ",np.max(y_est))
     
-    # k=0
-    # y_estimated_no_features = []
-    # for train_index, test_index in CV.split(X,y):
     
-    #     # extract training and test set for current CV fold
-    #     X_train = X[train_index]
-    #     y_train = y[train_index]
-    #     X_test = X[test_index]
-    #     y_test = y[test_index] 
-    #     internal_cross_validation = 10
-    #     #  RETURNED VALUE FROM rlr_validate
-    #     # opt_val_err = np.min(np.mean(test_error,axis=0))
-    #     '''The optimal lambda is choosen as the one that give the lowest mean test error'''
-    #     # opt_lambda = lambdas[np.argmin(np.mean(test_error,axis=0))]         
-    #     # train_err_vs_lambda = np.mean(train_error,axis=0)
-    #     # test_err_vs_lambda = np.mean(test_error,axis=0)
-    #     # mean_w_vs_lambda = np.squeeze(np.mean(w,axis=1))
-    #     opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_train, y_train, lambdas, internal_cross_validation)
-    #     print(opt_lambda)
-        
-    #     # Standardize outer fold based on training set, and save the mean and standard
-    #     # deviations since they're part of the model (they would be needed for
-    #     # making new predictions) - for brevity we won't always store these in the scripts
-    #     mu[k, :] = np.mean(X_train[:, 1:], 0)
-    #     sigma[k, :] = np.std(X_train[:, 1:], 0)
-    #     X_train[:, 1:] = (X_train[:, 1:] - mu[k, :] ) / sigma[k, :] 
-    #     X_test[:, 1:] = (X_test[:, 1:] - mu[k, :] ) / sigma[k, :] 
-        
-    #     Xty = X_train.T @ y_train # X.T * y
-    #     XtX = X_train.T @ X_train # X^2
-        
-    #     # Compute mean squared error without using the input data at all
-    #     Error_train_nofeatures[k] = np.square(y_train-y_train.mean()).sum(axis=0)/y_train.shape[0]
-    #     Error_test_nofeatures[k] = np.square(y_test-y_test.mean()).sum(axis=0)/y_test.shape[0]
-    #     y_estimated_no_features.append(y_train.mean())
-    #     mean_y = np.mean(y_train)
+    # Display scatter plot
+    plt.figure(figsize=(15,6))
+    plt.subplot(1,2,1)
+    plt.plot(y, y_est, '.')
+    plt.xlabel('Area (true)',fontsize=20)
+    plt.ylabel('Area (estimated)',fontsize=20)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.subplot(1,2,2)
+    plt.hist(residual,10)
+    plt.ylabel('Counts',fontsize=20)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.show()
     
-    #     # Estimate weights for the optimal value of lambda, on entire training set
-    #     lambdaI = opt_lambda * np.eye(M)
-    #     lambdaI[0,0] = 0 # Do no regularize the bias term
-    #     w_rlr[:,k] = np.linalg.solve(XtX+lambdaI,Xty).squeeze()
-    #     # Compute mean squared error with regularization with optimal lambda
-    #     Error_train_rlr[k] = np.square(y_train-X_train @ w_rlr[:,k]).sum(axis=0)/y_train.shape[0]
-    #     Error_test_rlr[k] = np.square(y_test-X_test @ w_rlr[:,k]).sum(axis=0)/y_test.shape[0]
-        
+def reg_cross_valid(data: Da.Data):
     
-    #     # Estimate weights for unregularized linear regression, on entire training set
-    #     w_noreg[:,k] = np.linalg.solve(XtX,Xty).squeeze()
-    #     Error_train[k] = np.square(y_train-X_train @ w_noreg[:,k]).sum(axis=0)/y_train.shape[0]
-    #     Error_test[k] = np.square(y_test-X_test @ w_noreg[:,k]).sum(axis=0)/y_test.shape[0]
-        
-    #     # yhat_baseline  = np.ones((y_test.shape[0],1))*(np.mean(y_train)).squeeze()
-    #     # Error_test_baseline[k] = np.square(y_test-yhat_baseline.T).sum(axis=1)/y_test.shape[0]
-        
-    #     # Display the results for the last cross-validation fold
-    #     if k == K-1:
-    #         plt.figure(k, figsize=(19,13))
-    #         plt.subplot(1,2,1)
-    #         plt.semilogx(lambdas,mean_w_vs_lambda.T[:,1:],'.-') # Don't plot the bias term
-    #         plt.xlabel('Regularization factor',fontsize=20)
-    #         plt.ylabel('Mean Coefficient Values',fontsize=20)
-    #         plt.xticks(fontsize=20)
-    #         plt.yticks(fontsize=20)
-    #         plt.legend(['X','Y','month','day','FFMC','DMC','DC','ISI',
-    #                           'temp','RH','wind','rain'],fontsize=17)
-                    
-    #         plt.subplot(1,2,2)
-    #         plt.title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)),fontsize=17)
-    #         plt.loglog(lambdas,train_err_vs_lambda.T,'b.-',lambdas,test_err_vs_lambda.T,'r.-')
-    #         plt.xlabel('Regularization factor',fontsize=20)
-    #         plt.ylabel('Squared error (crossvalidation)',fontsize=20)
-    #         plt.xticks(fontsize=20)
-    #         plt.yticks(fontsize=20)
-    #         plt.legend(['Train error','Validation error'],fontsize=17)
-            
-    #     k+=1
-    # plt.show()
-    
-    # # print('Mean squared wihtout features:')
-    # # print('- Training error: {0}'.format(Error_train_nofeatures.mean()))
-    # # print('- Test error:     {0}'.format(Error_test_nofeatures.mean()))
-    # # print('- R^2 train:     {0}'.format((Error_train_nofeatures.sum()-Error_train.sum())/Error_train_nofeatures.sum()))
-    # # print('- R^2 test:     {0}\n'.format((Error_test_nofeatures.sum()-Error_test.sum())/Error_test_nofeatures.sum()))
-    # print('Linear regression without feature selection:')
-    # print('- Training error: {0}'.format(Error_train.mean()))
-    # print('- Test error:     {0}'.format(Error_test.mean()))
-    # print('- R^2 train:     {0}'.format((Error_train_nofeatures.sum()-Error_train.sum())/Error_train_nofeatures.sum()))
-    # print('- R^2 test:     {0}\n'.format((Error_test_nofeatures.sum()-Error_test.sum())/Error_test_nofeatures.sum()))
-    # print('Regularized linear regression:')
-    # print('- Training error: {0}'.format(Error_train_rlr.mean()))
-    # print('- Test error:     {0}'.format(Error_test_rlr.mean()))
-    # print('- R^2 train:     {0}'.format((Error_train_nofeatures.sum()-Error_train_rlr.sum())/Error_train_nofeatures.sum()))
-    # print('- R^2 test:     {0}\n'.format((Error_test_nofeatures.sum()-Error_test_rlr.sum())/Error_test_nofeatures.sum()))
-    
-    # Weights = pd.DataFrame(w_rlr)
-    # Weights['Features']=pd.Series(['Offset (Maybe Mean)','X','Y','month','day','FFMC','DMC','DC','ISI',
-    #                           'temp','RH','wind','rain'])
-    # print(Weights)
-    # Weights_last_fold = Weights[['Features',9]]
-    # # print(Weights_last_fold)
-    
-    # Weights_last_fold.drop(index = 0, inplace = True)
-    # ax = Weights_last_fold[9].plot(kind='bar', figsize=(15, 10), legend=False, fontsize=25)
-    # ax.set_xticklabels(['X','Y','month','day','FFMC','DMC','DC','ISI','temp','RH','wind','rain'])
-    # plt.xticks(rotation=-30)
-    # plt.ylabel('Weights' , fontsize=25)
+    # ========================================================================================================================================
+    # Part 1B
+    # ========================================================================================================================================
 
+    # ========================================================================================================================================
+    # Separating the data in X and y format. Also applying K-fold cross validation
+    # ========================================================================================================================================
+    X = data.df
+    X = X.drop('area',axis=1)
+    X = np.array(X)
+    y = data.df['area']
+    yTrans = np.log(y+1)
+    y = yTrans    
+    y = [np.array(y)]
+    y = np.transpose(y)
+    N, M = X.shape
+    
+    
+    # random_seed = 1
+    X_tilda = X - np.ones((N,1))*X.mean(axis=0)
+    X_tilda = X_tilda*(1/np.std(X_tilda,0))
+    X = X_tilda
+    
+    
+    print_cv_inner_loop_text = True
+    print_cv_outer_loop_text = True
+    
+    apply_baseline = True
+    apply_ANN      = True 
+    apply_linear   = True
+    
+    # apply_setup_ii = True
+    
+    min_n_hidden_units = 1 # The minimum number of hidden units
+    max_n_hidden_units = 1 # The maximum number of hidden units
+
+    lambda_interval = range(164,168)
+
+    # ANN options
+    loss_fn   = torch.nn.MSELoss()
+    max_iter  = 10000
+    n_rep_ann = 1
+    
+    # Set K-folded CV options 
+    random_seed = 3
+    K_1   = 10 # Number of outer loops
+    K_2   = 10 # Number of inner loops
+    CV_1 = model_selection.KFold(n_splits=K_1 , shuffle=True, random_state=random_seed)
+    CV_2 = model_selection.KFold(n_splits=K_2, shuffle=True, random_state=random_seed)
+    # CV_setup_ii = sklearn.model_selection.KFold(n_splits=K_1,shuffle=True, random_state = random_seed + 1) 
+    
+    ## Define holders for outer CV results
+    test_error_outer_baseline                = [] 
+    test_error_outer_linear                  = [] 
+    test_errors_outer_ANN                    = []
+    data_outer_test_length                   = []
+    optimal_regularization_param_baseline    = []
+    optimal_regularization_param_linear      = []
+    optimal_regularization_param_ANN         = []
+    
+    # Outer loop
+    k_outer = 0
+    for train_outer_index, test_outer_index in CV_1.split(X):
+        if(print_cv_outer_loop_text):
+            print('Computing CV outer fold: {0}/{1}..'.format(k_outer+1,K_1))
+            
+        X_train_outer, y_train_outer = X[train_outer_index,:], y[train_outer_index]
+        X_test_outer, y_test_outer = X[test_outer_index,:], y[test_outer_index]
+        
+        if (apply_ANN):
+            X_train_outer_tensor = torch.tensor(X[train_outer_index,:], dtype=torch.float)
+            y_train_outer_tensor = torch.tensor(y[train_outer_index], dtype=torch.float)
+            X_test_outer_tensor  = torch.tensor(X[test_outer_index,:], dtype=torch.float)
+            y_test_outer_tensor  = torch.tensor(y[test_outer_index], dtype=torch.uint8)
+        
+        # Save length of outer train and test data
+        data_outer_train_length    = float(len(y_train_outer))
+        data_outer_test_length_tmp = float(len(y_test_outer))
+        
+        # Define holders for inner CV results
+        best_inner_model_baseline      = []
+        error_inner_baseline           = [] 
+        data_validation_length         = [] 
+        
+        validation_errors_inner_ANN_matrix         = np.array(np.ones(max_n_hidden_units - min_n_hidden_units + 1)) 
+        validation_errors_inner_linear_matrix      = np.array(np.ones(len(lambda_interval))) 
+        hidden_units_matrix                        = np.array(np.ones(max_n_hidden_units - min_n_hidden_units + 1))  
+        regularization_param_linear_matrix         = np.array(np.ones(len(lambda_interval)))
+        
+        # Inner loop
+        k_inner=0
+        for train_inner_index, test_inner_index in CV_2.split(X_train_outer):
+            if(print_cv_inner_loop_text):
+                print('Computing CV inner fold: {0}/{1}..'.format(k_inner+1,K_2))
+        
+            # Extract training and test set for current CV fold
+            X_train_inner, y_train_inner = X[train_inner_index,:], y[train_inner_index]
+            X_test_inner, y_test_inner = X[test_inner_index,:], y[test_inner_index]        
+                      
+            if (apply_ANN):
+                X_train_inner_tensor = torch.tensor(X[train_inner_index,:], dtype=torch.float)
+                y_train_inner_tensor = torch.tensor(y[train_inner_index], dtype=torch.float)
+                X_test_inner_tensor = torch.tensor(X[test_inner_index,:], dtype=torch.float)
+                y_test_inner_tensor = torch.tensor(y[test_inner_index], dtype=torch.uint8)
+            
+            
+            """INNER - BASELINE"""
+            # 'Fit' baseline model (simply the unconditional mean value of y)
+            mean_y                        = np.mean(y_train_inner)
+            y_est_test_inner_baseline     = mean_y
+            # Calculate validation error over inner test data
+            validation_errors_inner_baseline = np.sum((y_est_test_inner_baseline - y_test_inner)**2) / float(len(y_test_inner)) 
+            ## Store accuracy of CV-loop
+            error_inner_baseline.append(validation_errors_inner_baseline)
+            
+            ## Store data validation length
+            data_validation_length.append(float(len(y_test_inner)))
+    
+            if (apply_linear):
+                validation_errors_inner_linear  = []
+                regularization_param_linear     = []
+                
+                 
+                for lambda_val in lambda_interval:
+                    model = sklearn.linear_model.Ridge(alpha=lambda_val)
+                    model = model.fit(X_train_inner,y_train_inner)
+                    y_est_test_inner_linear = model.predict(X_test_inner)
+                     
+                    error      = (y_est_test_inner_linear - y_test_inner)**2
+                    error_rate =  np.sum(error) / len(y_test_inner)
+                    validation_errors_inner_linear.append(error_rate)
+                    regularization_param_linear.append(lambda_val)
+                    
+                validation_errors_inner_linear        = np.array(validation_errors_inner_linear)
+                validation_errors_inner_linear_matrix = np.vstack((validation_errors_inner_linear_matrix,validation_errors_inner_linear))
+                regularization_param_linear_matrix    = np.vstack((regularization_param_linear_matrix,regularization_param_linear))     
+                    
+            # Estimate ANN if apply_ANN is true
+            if (apply_ANN):
+                validation_errors_inner_ANN  = []
+                hidden_unit_applied          = []
+                for n_hidden_units in range(min_n_hidden_units,max_n_hidden_units + 1):
+                    model = lambda: torch.nn.Sequential(
+                        torch.nn.Linear(M, n_hidden_units), 
+                        torch.nn.Tanh(),   
+                        torch.nn.Linear(n_hidden_units, 1), 
+                        )
+                    """
+                    Returns:
+                        A list of three elements:
+                            best_net:       A trained torch.nn.Sequential that had the lowest 
+                                            loss of the trained replicates
+                            final_loss:     An float specifying the loss of best performing net
+                            learning_curve: A list containing the learning curve of the best net.
+                    """
+                    net, final_loss, learning_curve = train_neural_net(model,
+                                                        loss_fn,
+                                                        X=X_train_inner_tensor,
+                                                        y=y_train_inner_tensor,
+                                                        n_replicates=n_rep_ann,
+                                                        max_iter=max_iter)
+                    
+                    # Determine estimated class labels for test set
+                    y_est_inner   = net(X_test_inner_tensor) 
+                    
+                    # Determine errors and error rate
+                    e = (y_est_inner.float()-y_test_inner_tensor.float())**2
+                    error_rate = (sum(e).type(torch.float)/len(y_test_inner_tensor)).data.numpy()[0]
+                    validation_errors_inner_ANN.append(error_rate)
+                    
+                    ## Add applied hidden units to array
+                    hidden_unit_applied.append(n_hidden_units)
+                    
+                validation_errors_inner_ANN        = np.array(validation_errors_inner_ANN)
+                validation_errors_inner_ANN_matrix = np.vstack((validation_errors_inner_ANN_matrix,validation_errors_inner_ANN))
+                hidden_units_matrix                = np.vstack((hidden_units_matrix,hidden_unit_applied))
+    
+            k_inner+=1
+        
+        """Outer-Baseline"""
+        # 'Fit' baseline model 
+        mean_y                        = np.mean(y_train_outer)
+        y_est_test_outer_baseline     = mean_y             
+        # Estimate the test error (best model from inner fitted on the outer data)
+        test_error_outer_baseline_tmp = np.sum((y_est_test_outer_baseline - y_test_outer)**2) / float(len(y_test_outer))
+        test_error_outer_baseline.append(test_error_outer_baseline_tmp)
+        # Calculate validation error over inner test data
+        validation_errors_inner_baseline = np.sum((y_est_test_inner_baseline - y_test_inner)**2) / float(len(y_test_inner)) 
+    
+        # Add length of outer test data
+        data_outer_test_length.append(data_outer_test_length_tmp)
+        
+        # Find optimal model of ANN (if apply_ANN is true)
+        if (apply_ANN):        
+            validation_errors_inner_ANN_matrix = np.delete(validation_errors_inner_ANN_matrix,0,0)
+            hidden_units_matrix                = np.delete(hidden_units_matrix,0,0)
+            validation_errors_inner_ANN_matrix = np.transpose(validation_errors_inner_ANN_matrix)  
+            estimated_inner_test_error_ANN_models = []
+            for s in range(0,len(validation_errors_inner_ANN_matrix)):
+                # tmp_inner_test_error = np.sum(np.multiply(data_validation_length,validation_errors_inner_ANN_matrix[s])) / data_outer_train_length
+                tmp_inner_test_error = np.sum(np.multiply(data_validation_length,validation_errors_inner_ANN_matrix[s])) / data_outer_train_length
+    
+                estimated_inner_test_error_ANN_models.append(tmp_inner_test_error)
+            
+            # Saves the regularization parameter for the best performing ANN model
+            lowest_est_inner_error_ANN_models = min(estimated_inner_test_error_ANN_models)
+            index_tmp                         = (list(estimated_inner_test_error_ANN_models).index(lowest_est_inner_error_ANN_models))        
+            optimal_regularization_param_ANN.append(hidden_units_matrix[k_outer][index_tmp])
+            
+            # Estimates the test error on outer test data
+            model = lambda: torch.nn.Sequential(
+                torch.nn.Linear(M, optimal_regularization_param_ANN[k_outer].astype(int)), 
+                torch.nn.Tanh(),   
+                torch.nn.Linear(optimal_regularization_param_ANN[k_outer].astype(int), 1), 
+                )
+            # Run optimization
+            net, final_loss, learning_curve = train_neural_net(model,
+                                                loss_fn,
+                                                X=X_train_outer_tensor,
+                                                y=y_train_outer_tensor,
+                                                n_replicates=n_rep_ann,
+                                                max_iter=max_iter)
+            y_est_outer_ANN = net(X_test_outer_tensor)
+            
+            # Determine errors and error rate
+            e = (y_est_outer_ANN.float()-y_test_outer_tensor.float())**2
+            error_rate = (sum(e).type(torch.float)/len(y_test_outer_tensor)).data.numpy()[0]
+            test_errors_outer_ANN.append(error_rate)
+    
+    
+        if (apply_linear):
+            validation_errors_inner_linear_matrix = np.delete(validation_errors_inner_linear_matrix,0,0) 
+            validation_errors_inner_linear_matrix   = np.transpose(validation_errors_inner_linear_matrix)
+            estimated_inner_test_error_linear_models = []
+            for s in range(0,len(validation_errors_inner_linear_matrix)):
+                tmp_inner_test_error = np.sum(np.multiply(data_validation_length,validation_errors_inner_linear_matrix[s])) / data_outer_train_length
+                estimated_inner_test_error_linear_models.append(tmp_inner_test_error)
+  
+            lowest_est_inner_error_linear_models = min(estimated_inner_test_error_linear_models)
+            index_lambda = list(estimated_inner_test_error_linear_models).index(lowest_est_inner_error_linear_models)
+            optimal_regularization_param_linear.append(lambda_interval[index_lambda])         
+  
+            # Standardize outer fold based on training set
+            mu = np.mean(X_train_outer[:, 1:], 0)
+            sigma = np.std(X_train_outer[:, 1:], 0)
+            X_train_outer[:, 1:] = (X_train_outer[:, 1:] - mu) / sigma
+            X_test_outer[:, 1:] = (X_test_outer[:, 1:] - mu) / sigma
+            
+            model = sklearn.linear_model.Ridge(alpha=optimal_regularization_param_linear[k_outer])
+            model = model.fit(X_train_outer,y_train_outer)
+            y_est_test_outer_linear = model.predict(X_test_outer)
+           
+            error      = (y_est_test_outer_linear - y_test_outer)**2
+            error_rate =  np.sum(error) / len(y_test_outer)
+            test_error_outer_linear.append(error_rate)  
+    
+        k_outer+=1
+        
+    generalization_error_baseline_model = np.sum(np.multiply(test_error_outer_baseline,data_outer_test_length)) * (1/N) 
+    print('est gen error of baseline model: ' +str(round(generalization_error_baseline_model, ndigits=3)))  
+    if (apply_ANN):
+        generalization_error_ANN_model = np.sum(np.multiply(test_errors_outer_ANN,data_outer_test_length)) * (1/N)
+        print('est gen error of ANN model: ' +str(round(generalization_error_ANN_model, ndigits=3)))    
+    
+    if (apply_linear):
+        generalization_error_linear_model = np.sum(np.multiply(test_error_outer_linear,data_outer_test_length)) * (1/N)
+        print('est gen error of linear model: ' +str(round(generalization_error_linear_model, ndigits=3)))
+
+
+
+    ## Create output table as dataframe
+    n_of_cols                  = sum([apply_ANN,apply_linear])*2 + 2   
+    n_of_index                 = K_1 + 1 
+    df_output_table            = pd.DataFrame(np.ones((n_of_index,n_of_cols)),index=range(1,n_of_index + 1))
+    df_output_table.index.name = "Outer fold"
+       
+        
+    if(apply_ANN):
+        df_output_table.columns                = ['test_data_size','n_hidden_units','ANN_test_error','lambda','Linear_test_error','baseline_test_error']
+        optimal_regularization_param_ANN.append('')
+        optimal_regularization_param_linear.append('')
+        data_outer_test_length.append('')
+        col_2                                  = list(np.array(test_errors_outer_ANN).round(3)*100)
+        col_2.append(round(generalization_error_ANN_model*100,ndigits=1))
+        col_4                                  = list(np.array(test_error_outer_linear).round(3)*100)
+        col_4.append(round(generalization_error_linear_model*100,ndigits=1))    
+        col_5                                  = list(np.array(test_error_outer_baseline).round(3)*100)
+        col_5.append(round(generalization_error_baseline_model*100,ndigits=1))       
+            
+        ## Add values to columns in output table    
+        df_output_table['test_data_size']      = data_outer_test_length
+        df_output_table['n_hidden_units']      = optimal_regularization_param_ANN
+        df_output_table['ANN_test_error']      = col_2
+        df_output_table['lambda']              = optimal_regularization_param_linear
+        df_output_table['Linear_test_error']   = col_4
+        df_output_table['baseline_test_error'] = col_5
+    ## Export as csv
+    df_output_table.to_csv('final_cross.csv')
+    
+    
+   
+    # Stats evaluation
+    from toolbox_02450 import ttest_twomodels
+        
+    # Should use the same D_par train set and D_test for stats
+    CV_setup_I = CV_1
+    
+    # Loss function for the stats    
+    loss_in_r_function = 2 
+    
+    alpha_t_test            = 0.05
+    rho_t_test              = 1/K_1
+    
+    y_true = []
+    yhat_ANN = []
+    yhat_baseline = []
+    yhat_linear = []
+    
+    k = 0
+    most_common_lambda = stats.mode(optimal_regularization_param_linear).mode[0].astype('float64')
+    for train_index,test_index in CV_setup_I.split(X):
+        print('Computing setup I CV K-fold: {0}/{1}..'.format(k+1,K_1))
+        X_train, y_train = X[train_index,:], y[train_index]
+        X_test, y_test = X[test_index, :], y[test_index]
+        
+        X_train_tensor = torch.tensor(X[train_index,:], dtype=torch.float)
+        y_train_tensor = torch.tensor(y[train_index], dtype=torch.float)
+        X_test_tensor = torch.tensor(X[test_index,:], dtype=torch.float)
+        y_test_tensor = torch.tensor(y[test_index], dtype=torch.uint8)
+        
+        # Train the 3 models on the same TRAIN data set
+        
+        # Train baseline
+        model_baseline = np.mean(y_train)      
+        # Train linear-regression
+        model_linear = sklearn.linear_model.Ridge(alpha=most_common_lambda).fit(X_train,y_train.squeeze())
+        # Train ANN
+        most_common_regu_ANN  = 1
+        model_second = lambda: torch.nn.Sequential(
+                                torch.nn.Linear(M, most_common_regu_ANN), #M features to H hidden units
+                                # 1st transfer function, either Tanh or ReLU:
+                                #torch.nn.ReLU(), 
+                                torch.nn.Tanh(),   
+                                torch.nn.Linear(most_common_regu_ANN, 1), # H hidden units to 1 output neuron
+                                # no final tranfer function, i.e. "linear output"
+                                )
+        net, final_loss, learning_curve = train_neural_net(model_second,
+                                           loss_fn,
+                                           X=X_train_tensor,
+                                           y=y_train_tensor,
+                                           n_replicates=n_rep_ann,
+                                           max_iter=max_iter)
+        
+        
+        
+        # Train the 3 models on the same TEST data set
+        
+        # Test baseline
+        base_pred = np.ones((y_test.shape[0],1))*model_baseline
+        for el in base_pred:
+            yhat_baseline.append(el[0])        
+        # Test linear
+        lin_pred = model_linear.predict(X_test).reshape(-1,1)
+        for el in lin_pred:
+            yhat_linear.append(el[0])
+        # Test ANN
+        yhat_ = net(X_test_tensor)
+        for el in yhat_:
+            yhat_ANN.append(el.detach().numpy()[0])
+        for el in y_test:
+            y_true.append(el[0])
+        
+        k += 1
+        
+        
+            
+    y_true = np.asarray(y_true)
+    yhat_baseline = np.asarray(yhat_baseline)
+    yhat_linear = np.asarray(yhat_linear)
+    yhat_ANN = np.asarray(yhat_ANN)
+    
+    mean_baseline_vs_linear = - np.mean(np.abs(y_true - yhat_baseline)**2 - np.abs(y_true - yhat_linear) ** 2)
+    mean_baseline_vs_ANN = - np.mean(np.abs(y_true - yhat_baseline)**2 - np.abs(y_true - yhat_ANN) ** 2)
+    mean_ANN_vs_linear = - np.mean(np.abs(y_true - yhat_ANN)**2 - np.abs(y_true - yhat_linear) ** 2)
+    
+    ## Baseline vs logistic regression    
+    mean_setupI_base_vs_linear, CI_setupI_base_vs_linear, p_setupI_base_vs_linear = ttest_twomodels(np.asarray(y_true),yhat_baseline,yhat_linear, loss_norm_p = 2)
+    ## Baseline vs 2nd model    
+    mean_setupI_base_vs_ANN, CI_setupI_base_vs_ANN, p_setupI_base_vs_ANN = ttest_twomodels(y_true,yhat_baseline,yhat_ANN, loss_norm_p = 2)
+    ## Logistic regression vs 2nd model    
+    mean_setupI_ANN_vs_linear, CI_setupI_ANN_vs_linear,  p_setupI_ANN_vs_linear = ttest_twomodels(y_true,yhat_ANN,yhat_linear, loss_norm_p = 2)
+    
+    ## Create output table for statistic tests
+    df_output_table_statistics = pd.DataFrame(np.ones((3,6)), columns = ['H_0','meanZ','p_value','CI_lower','CI_upper','conclusion'])
+    df_output_table_statistics['H_0'] = ['err_baseline - err_linear','err_baseline - err_ANN=0','err_ANN-err_linear=0']
+    df_output_table_statistics['meanZ'] = [- mean_setupI_base_vs_linear, - mean_setupI_base_vs_ANN, - mean_setupI_ANN_vs_linear]
+    df_output_table_statistics['p_value']         = [p_setupI_base_vs_linear,p_setupI_base_vs_ANN,p_setupI_ANN_vs_linear]
+    df_output_table_statistics['CI_lower']        = [CI_setupI_base_vs_linear[0],CI_setupI_base_vs_ANN[0],CI_setupI_ANN_vs_linear[0]]
+    df_output_table_statistics['CI_upper']        = [CI_setupI_base_vs_linear[1],CI_setupI_base_vs_ANN[1],CI_setupI_ANN_vs_linear[1]]
+    rejected_null                                   = (df_output_table_statistics.loc[:,'p_value']<alpha_t_test)
+    df_output_table_statistics.loc[rejected_null,'conclusion']   = 'H_0 rejected'
+    df_output_table_statistics.loc[~rejected_null,'conclusion']  = 'H_0 not rejected'
+    df_output_table_statistics                      = df_output_table_statistics.set_index('H_0')
+    
+    ## Export df as csv
+    df_output_table_statistics.to_csv('final_stat.csv',encoding='UTF-8')

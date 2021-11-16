@@ -136,6 +136,8 @@ def plot_box_plot(data: Da.Data):
 def plot_correlation_matrix(data: Da.Data):    
     corr = data.df.corr()
     
+    
+    
     figure, ax = plt.subplots(figsize=(14, 10))
     plt.xticks(fontsize=17,weight='bold')
     plt.yticks(fontsize=17 ,weight='bold', rotation=45)
@@ -148,8 +150,41 @@ def plot_correlation_matrix(data: Da.Data):
     #                           'temp','RH','wind','rain','area'),rotation=45);
     g.set_xticklabels(labels=('FFMC','DMC','DC','ISI',
                               'temp','RH','wind','rain','area'),rotation=45);
-    g.set_yticklabels(labels=data.df_attributes,rotation=30);
+    g.set_yticklabels(labels=('FFMC','DMC','DC','ISI',
+                              'temp','RH','wind','rain','area'),rotation=30);
     # g.set_yticklabels(labels=data.df_attributes, rotation=30, horizontalalignment='left')
+    
+    # corr = data.df.corr()
+    
+    # corr1 = corr.iloc[:8,:8]
+    # col = corr['area']
+    # col1 = col.iloc[:8]
+    # corr1['area'] = col1
+    # col2 = col1.to_numpy()
+    # col2 = np.append(col2,1)
+    # col2 = np.reshape(col2, ((1,-1)))
+    # last = pd.DataFrame(col2, columns=['FFMC','DMC','DC','ISI','temp','RH','wind','rain','area'])
+    
+    
+    # corr2 = corr1.append(last)
+    # # corr1['area'] = col
+    
+    
+    
+    # figure, ax = plt.subplots(figsize=(14, 10))
+    # plt.xticks(fontsize=17,weight='bold')
+    # plt.yticks(fontsize=17 ,weight='bold', rotation=45)
+    # sns.set(font_scale = 1)
+    # # cmap=sns.diverging_palette(220, 10, as_cmap=True,center='dark')
+    # cmap= "YlGnBu_r"
+    # g = sns.heatmap(corr2, annot=True,mask=np.zeros_like(corr2, dtype=np.bool), cmap=cmap ,
+    #             square=True,ax=ax);
+    # # g.set_xticklabels(labels=('X','Y','month','day','FFMC','DMC','DC','ISI',
+    # #                           'temp','RH','wind','rain','area'),rotation=45);
+    # g.set_xticklabels(labels=('FFMC','DMC','DC','ISI',
+    #                           'temp','RH','wind','rain','area'),rotation=30);
+    # g.set_yticklabels(labels=('FFMC','DMC','DC','ISI',
+    #                           'temp','RH','wind','rain','area'),rotation=30);
     
 def plot_cum_variance(data: Da.Data):
     

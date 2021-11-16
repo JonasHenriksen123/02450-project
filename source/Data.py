@@ -140,23 +140,21 @@ class Data:
         integer_encoded = label_encoder.fit_transform(values)
         onehot_encoder = OneHotEncoder(sparse=False)
         integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
-        onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
-        
-                
-        jan, feb,mar,apr,may,jun,jul,aug,sep,otc,nov,dec = [],[],[],[],[],[],[],[],[],[],[],[]
+        onehot_encoded = onehot_encoder.fit_transform(integer_encoded)       
+        jan,feb,mar,apr,may,jun,jul,aug,sep,otc,nov,dec = [],[],[],[],[],[],[],[],[],[],[],[]
         for vec in onehot_encoded:
-            jan.append(vec[0])
-            feb.append(vec[1])
-            mar.append(vec[2])
-            apr.append(vec[3])
-            may.append(vec[4])
-            jun.append(vec[5])
-            jul.append(vec[6])
-            aug.append(vec[7])
-            sep.append(vec[8])
-            otc.append(vec[9])
-            nov.append(vec[10])
-            dec.append(vec[11])
+            jan.append(vec[0]+1)
+            feb.append(vec[1]+1)
+            mar.append(vec[2]+1)
+            apr.append(vec[3]+1)
+            may.append(vec[4]+1)
+            jun.append(vec[5]+1)
+            jul.append(vec[6]+1)
+            aug.append(vec[7]+1)
+            sep.append(vec[8]+1)
+            otc.append(vec[9]+1)
+            nov.append(vec[10]+1)
+            dec.append(vec[11]+1)
         self.df['jan'] = jan
         self.df['feb'] = feb
         self.df['mar'] = mar
@@ -180,13 +178,13 @@ class Data:
         onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
         mon, tue, wed, thu, fri, sat, sun = [],[],[],[],[],[],[]
         for vec in onehot_encoded:
-            mon.append(vec[0])
-            tue.append(vec[1])
-            wed.append(vec[2])
-            thu.append(vec[3])
-            fri.append(vec[4])
-            sat.append(vec[5])
-            sun.append(vec[6])
+            mon.append(vec[0]+1)
+            tue.append(vec[1]+1)
+            wed.append(vec[2]+1)
+            thu.append(vec[3]+1)
+            fri.append(vec[4]+1)
+            sat.append(vec[5]+1)
+            sun.append(vec[6]+1)
         self.df['mon'] = mon
         self.df['tue'] = tue
         self.df['wed'] = wed
@@ -205,15 +203,15 @@ class Data:
         integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
         onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
         for vec in onehot_encoded:
-            x1.append(vec[0])
-            x2.append(vec[1])
-            x3.append(vec[2])
-            x4.append(vec[3])
-            x5.append(vec[4])
-            x6.append(vec[5])
-            x7.append(vec[6])
-            x8.append(vec[7])
-            x9.append(vec[8])
+            x1.append(vec[0]+1)
+            x2.append(vec[1]+1)
+            x3.append(vec[2]+1)
+            x4.append(vec[3]+1)
+            x5.append(vec[4]+1)
+            x6.append(vec[5]+1)
+            x7.append(vec[6]+1)
+            x8.append(vec[7]+1)
+            x9.append(vec[8]+1)
         self.df['X1'] = x1
         self.df['X2'] = x2
         self.df['X3'] = x3
@@ -237,15 +235,15 @@ class Data:
 
         
         for vec in onehot_encoded:
-            y1.append(0.0)
-            y2.append(vec[0])
-            y3.append(vec[1])
-            y4.append(vec[2])
-            y5.append(vec[3])
-            y6.append(vec[4])
-            y7.append(0.0)
-            y8.append(0.0)
-            y9.append(vec[5])
+            y1.append(0.0+1)
+            y2.append(vec[0]+1)
+            y3.append(vec[1]+1)
+            y4.append(vec[2]+1)
+            y5.append(vec[3]+1)
+            y6.append(vec[4]+1)
+            y7.append(0.0+1)
+            y8.append(0.0+1)
+            y9.append(vec[5]+1)
         self.df['Y1'] = y1
         self.df['Y2'] = y2
         self.df['Y3'] = y3
@@ -257,42 +255,14 @@ class Data:
         self.df['Y9'] = y9
         
         
+        
         # self.df = self.df.iloc[:,4:]
         self.df = self.df.iloc[:,4:13]
         self.df_attributes = list(self.df.columns)
         self.y = self.df['area']
         self.df = self.df.drop('area',axis=1)
         self.df['area'] = np.array(self.y)
-        # print(self.df)
-        
-        # self.df_entire = self.df
-        # self.df_original = self.df_entire
-        
-        # temp = []
-        # temp1 = []
-        # for i in df['area']:
-        #     if i > 0.5:
-        #         temp.append('Small')
-        #         temp1.append(0)
-        #     else:
-        #         temp.append('Big')
-        #         temp1.append(1)
-        
-        
-        # self.df['month'] = self.df['month'].astype('int64')
-        # self.df['day'] = self.df['day'].astype('int64')
-        # print(self.df)
-        
-        # self.df = self.df.drop('area',axis=1)
-        # self.df_entire = self.df_entire.drop('area',axis=1)
-        # self.df['Burned area'] = temp
-        # self.df_entire['area'] = temp1
-        
-        
-        # self.df_tilda = (self.df.iloc[:, :-1] - self.df.iloc[:, :-1].mean(axis=0))/self.df.iloc[:, :-1].std(axis=0)
-        # self.df_tilda['Burned area'] = temp
-        # self.df_data = self.df.drop('Burned area',axis=1) # output variable not included
-        # self.df_data_tilda= self.df_tilda.drop('Burned area',axis=1) #output variable not included
+
         #endregion
         
 
